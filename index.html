@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>404 - Not Found</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23e9e7e2'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23333a44' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4.2' fill='%237f9bb5'/%3E%3C/svg%3E">
+<style>
+:root{
+  --paper:#f1f1f1; --ink:#232323; --muted:#7d7d7d; --rule:#c9c9c9;
+  --faint:#a6a6a6; --cold:#c9a24a; --void:#050506;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--void);overflow:hidden;
+  font:400 16px/1.4 "Times New Roman",Times,serif;color:var(--ink);cursor:crosshair}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+#game{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:block;opacity:0;transition:opacity .45s}
+#grain{position:fixed;inset:-40%;z-index:3;pointer-events:none;opacity:0;
+  mix-blend-mode:multiply;transition:opacity .35s}
+#ui{position:fixed;inset:0;z-index:2;background:var(--paper);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:0 6vw;user-select:text;
+  transition:opacity .55s;cursor:crosshair}
+h1{font-size:min(23vw,160px);line-height:.95;font-weight:400;margin:0;
+  letter-spacing:-.01em;color:var(--ink)}
+h1 #z{cursor:pointer;display:inline-block;outline:none;-webkit-tap-highlight-color:transparent}
+h1 #z:focus-visible{outline:1px dashed var(--cold);outline-offset:.06em}
+.sub{font-size:min(4vw,19px);margin:.5em 0 0;color:var(--ink)}
+.s{width:min(100%,600px);margin:24px 0 0;padding-top:10px;
+  border-top:1px solid var(--rule);color:var(--faint);font-size:13px;line-height:1.7;text-align:left}
+.srv{font-style:italic;color:#8d9299;font-size:13px;margin:14px 0 0;width:min(100%,600px);text-align:left}
+#hint{height:18px;margin-top:14px;font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#b0b4b8;letter-spacing:.16em;text-align:center}
+#hud{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .4s;
+  font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#c3ccd6}
+#hud .row{position:absolute;left:18px;bottom:16px;display:flex;gap:12px;align-items:center}
+#hud .form{color:#8ea7bd;letter-spacing:.12em}
+#bar{width:120px;height:4px;background:rgba(255,255,255,.14);position:relative}
+#bar i{position:absolute;inset:0;width:100%;background:#7f9bb5;transform-origin:left center}
+#frag{position:absolute;right:18px;bottom:16px}
+#say{position:absolute;left:50%;bottom:62px;transform:translateX(-50%);max-width:min(78vw,660px);
+  text-align:center;color:#aebdca;opacity:0;transition:opacity .35s;line-height:1.7;font-size:13px}
+#chap{position:fixed;left:0;right:0;top:14%;z-index:4;text-align:center;pointer-events:none;
+  color:#c4d2de;font:15px/1.6 "Times New Roman",Times,serif;letter-spacing:.28em;
+  opacity:0;transition:opacity .8s}
+#chap b{font-weight:400;display:block;margin-top:6px;letter-spacing:.1em;color:#8ea7bd;font-size:12px}
+#pause{position:fixed;inset:0;z-index:5;display:none;align-items:center;justify-content:center;
+  background:rgba(5,6,9,.82);color:#ccd6df;font:14px/1.9 ui-monospace,monospace;text-align:center}
+#touch{position:fixed;left:0;right:0;bottom:0;z-index:4;display:none;
+  justify-content:space-between;padding:10px 14px 18px;pointer-events:none}
+#touch .pad{display:flex;gap:10px;pointer-events:auto}
+#touch button{width:52px;height:52px;border:1px solid rgba(160,190,210,.28);
+  background:rgba(20,26,34,.55);color:#b9c9d6;font:15px/1 ui-monospace,monospace;
+  border-radius:10px;-webkit-user-select:none;user-select:none;touch-action:none}
+#touch button:active{background:rgba(120,160,190,.25)}
+@media (pointer:coarse){#touch{display:flex}}
+@media (prefers-reduced-motion:reduce){h1 #z{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<canvas id="game"></canvas>
+<div id="grain"></div>
+
+<div id="ui">
+  <h1>4<span id="z" role="button" tabindex="0" aria-label="the zero">0</span>4</h1>
+  <p class="sub">Not Found</p>
+  <p class="s">The requested URL was not found on this server.<br>
+  Additionally, a 404 Not Found error was encountered while trying to
+  use an ErrorDocument to handle the request.</p>
+  <p class="srv">Apache/2.4.44 (Unix) Server at peephole Port 80</p>
+  <div id="hint"></div>
+</div>
+
+<div id="hud">
+  <div class="row"><span class="form" id="form">静影</span><div id="bar"><i></i></div></div>
+  <div id="frag">页芯 0/3</div>
+  <div id="say"></div>
+</div>
+<div id="chap"></div>
+<div id="pause">ESC 已暂停<br><span style="color:#7f8b98">按 ESC 继续</span></div>
+<div id="touch">
+  <div class="pad"><button data-k="a">←</button><button data-k="d">→</button></div>
+  <div class="pad"><button data-k="f">换</button><button data-k="e">E</button><button data-k=" ">↑</button></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   0. 基础
+   ============================================================ */
+var bgCv = document.getElementById('bg'), gmCv = document.getElementById('game');
+var bg2 = null, ctx = gmCv.getContext('2d');
+function getBG2(){ if (!bg2) bg2 = bgCv.getContext('2d'); return bg2; }
+var W = 0, H = 0, DPR = 1, gl = null, glInfo = null, GL_OK = false, GL_ERR = '';
+
+function el(id){ return document.getElementById(id); }
+function clamp(v,a,b){ return v < a ? a : v > b ? b : v; }
+function rnd(a,b){ return a + Math.random()*(b-a); }
+
+/* ============================================================
+   1. 音频：全部 Web Audio 现合，不引一个音频文件
+   ============================================================ */
+var AC = null, MG = null, AMB = null;
+
+function ac(){
+  if (!AC){
+    var C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return null;
+    AC = new C();
+    MG = AC.createGain(); MG.gain.value = .72; MG.connect(AC.destination);
+    var buf = noiseBuf(2), n = AC.createBufferSource(), lp = AC.createBiquadFilter();
+    buf.loop = true; lp.type = 'lowpass'; lp.frequency.value = 420;
+    AMB = AC.createGain(); AMB.gain.value = .05;
+    n.buffer = buf; n.connect(lp); lp.connect(AMB); AMB.connect(MG); n.start();
+    var o = AC.createOscillator(), og = AC.createGain();
+    o.type = 'sine'; o.frequency.value = 58; og.gain.value = .011;
+    o.connect(og); og.connect(MG); o.start();
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function noiseBuf(sec){
+  var a = AC, n = Math.max(1, Math.floor(a.sampleRate * sec));
+  var b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = Math.random()*2 - 1;
+  return b;
+}
+function burst(freq, vol, dur, type){
+  try{
+    var a = ac(); if (!a) return;
+    var t = a.currentTime, s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+    s.buffer = noiseBuf(Math.max(.05, dur + .03));
+    f.type = type || 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(MG); s.start(t); s.stop(t + dur + .03);
+  }catch(e){}
+}
+function tone(hz, vol, dur, type, slide){
+  try{
+    var a = ac(); if (!a) return;
+    var t = a.currentTime, o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(hz, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(MG); o.start(t); o.stop(t + dur + .03);
+  }catch(e){}
+}
+/* 三种残相脚步：同一套合成器，换频率、滤波与衰减 */
+var STEPFX = [
+  function(){ tone(48, .18, .2, 'sine', 30); burst(320, .05, .14, 'lowpass'); },
+  function(){ burst(1500, .07, .07, 'bandpass'); burst(2100, .02, .05, 'bandpass'); },
+  function(){ burst(760, .06, .05, 'highpass'); tone(1400, .02, .04, 'square'); }
+];
+/* 门的静默：0.45 秒，不是装饰，是边界撕开的仪式 */
+function holySilence(ms){
+  try{
+    var a = ac(); if (!a) return;
+    var g0 = AMB ? AMB.gain.value : 0;
+    if (AMB) AMB.gain.value = .006;
+    a.suspend();
+    setTimeout(function(){
+      try{ a.resume(); }catch(e){}
+      if (AMB) AMB.gain.value = g0;
+    }, ms);
+  }catch(e){}
+}
+
+/* ============================================================
+   2. 外壳：标准 404，中间那个 0 是唯一不对的地方
+   ============================================================ */
+var uiEl = el('ui'), hint = el('hint'), grainEl = el('grain');
+var clk = 0, opened = false;
+
+(function grainLayer(){
+  var N = 160, c = document.createElement('canvas');
+  c.width = c.height = N;
+  var x = c.getContext('2d'), im = x.createImageData(N, N), d = im.data;
+  for (var i = 0; i < N*N; i++){
+    var v = 226 + Math.random()*29;
+    d[i*4] = d[i*4+1] = d[i*4+2] = v; d[i*4+3] = 255;
+  }
+  x.putImageData(im, 0, 0);
+  grainEl.style.backgroundImage = 'url(' + c.toDataURL() + ')';
+  grainEl.style.backgroundRepeat = 'repeat';
+})();
+
+function knockSound(n){
+  var hz = [46, 58, 32][n-1] || 46;
+  tone(hz, .5, .55, 'sine', hz*.6);
+  burst(180, .10, .30, 'lowpass');
+  if (n === 3){ tone(26, .95, .34, 'sine', 18); burst(90, .18, .5, 'lowpass'); }
+}
+
+function knockOnce(){
+  if (clk >= 3 || opened) return;
+  ac();
+  clk++;
+  var z = el('z');
+  if (z.animate) z.animate(
+    [{transform:'translate(' + rnd(-3,3).toFixed(1) + 'px,' + rnd(-3,3).toFixed(1) + 'px)'},
+     {transform:'none'}], {duration:90});
+  grainEl.style.opacity = Math.min(clk * .34, .7);
+  knockSound(clk);
+
+  if (clk === 1){ hint.textContent = 'something stirs beneath the error'; document.title = '(1) 404 - Not Found'; }
+  if (clk === 2){ hint.textContent = 'the zero blinked'; document.title = '(2) 404 - Not Found'; }
+  if (clk === 3){
+    opened = true;
+    hint.textContent = 'your request was kept';
+    document.title = '(3) 200 - OK';
+    uiEl.style.opacity = 0;
+    uiEl.style.pointerEvents = 'none';
+    grainEl.style.opacity = 0;
+    holySilence(420);
+    setTimeout(function(){
+      document.title = 'void - echoing';
+      startGame();
+    }, 420);
+  }
+}
+el('z').addEventListener('click', function(e){ e.stopPropagation(); knockOnce(); });
+el('z').addEventListener('keydown', function(e){
+  if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); knockOnce(); }
+});
+addEventListener('click', function(e){
+  if (!opened && e.target !== el('z') && !el('z').contains(e.target)) knockOnce();
+});
+addEventListener('keydown', function(e){
+  if (opened) return;
+  if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); knockOnce(); }
+});
+
+/* 结局 A 回到这一页：门重新关上，计数清零 */
+function backToShell(){
+  G.running = false;
+  G.ending = null;
+  el('hud').style.opacity = 0;
+  el('chap').style.opacity = 0;
+  hideSay();
+  gmCv.style.opacity = 0;
+  uiEl.style.opacity = 1;
+  uiEl.style.pointerEvents = 'auto';
+  document.title = '404 - Not Found';
+  hint.textContent = '';
+  clk = 0; opened = false;
+  grainEl.style.opacity = 0;
+  try{ el('z').focus(); }catch(e){}
+}
+
+/* ============================================================
+   3. WebGL 氛围层（优先）；拿不到就 Canvas2D 画同一层
+   ============================================================ */
+var VS = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}';
+var FS = [
+'precision mediump float;',
+'uniform float u_t,u_area,u_dark,u_w;',
+'uniform vec2 u_res;',
+'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+'void main(){',
+'  vec2 uv=gl_FragCoord.xy/u_res;',
+'  vec3 top,bot,glow;',
+'  if(u_area<0.5){top=vec3(.098,.108,.133);bot=vec3(.039,.047,.059);glow=vec3(.36,.47,.56);}',
+'  else if(u_area<1.5){top=vec3(.108,.120,.145);bot=vec3(.043,.050,.062);glow=vec3(.32,.46,.50);}',
+'  else {top=vec3(.082,.098,.133);bot=vec3(.027,.031,.043);glow=vec3(.40,.50,.62);}',
+'  vec3 c=mix(top,bot,uv.y);',
+'  float r=length(uv-vec2(.5,.46));',
+'  c+=glow*0.085*smoothstep(.95,.10,r)*(0.55+0.25*sin(u_t*0.25));',
+'  float n=h(uv*vec2(300.,170.)+u_t*0.8);',
+'  float n2=h(uv*vec2(60.,34.)+u_t*0.16);',
+'  c+=(n-.5)*0.038+(n2-.5)*0.05;',
+'  float band=sin(uv.y*72.0+u_t*1.6+n*4.0);',
+'  c+=vec3(.016,.024,.034)*band*0.5;',
+'  float vg=smoothstep(1.05,.35,length(uv-vec2(.5,.5)));',
+'  c*=0.42+0.58*vg;',
+'  c=mix(c,vec3(.012,.014,.022),u_dark);',
+'  gl_FragColor=vec4(c,1.0);',
+'}'].join('\n');
+
+function initGL(){
+  try{
+    gl = bgCv.getContext('webgl') || bgCv.getContext('experimental-webgl');
+    if (!gl){ GL_ERR = 'no-context'; return false; }
+    var vsh = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vsh, VS); gl.compileShader(vsh);
+    if (!gl.getShaderParameter(vsh, gl.COMPILE_STATUS)){ GL_ERR = 'vs:' + gl.getShaderInfoLog(vsh); return false; }
+    var fsh = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fsh, FS); gl.compileShader(fsh);
+    if (!gl.getShaderParameter(fsh, gl.COMPILE_STATUS)){ GL_ERR = 'fs:' + gl.getShaderInfoLog(fsh); return false; }
+    var p = gl.createProgram();
+    gl.attachShader(p, vsh); gl.attachShader(p, fsh); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)){ GL_ERR = 'link:' + gl.getProgramInfoLog(p); return false; }
+    gl.useProgram(p);
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(p, 'a');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    glInfo = {
+      t: gl.getUniformLocation(p, 'u_t'),
+      area: gl.getUniformLocation(p, 'u_area'),
+      dark: gl.getUniformLocation(p, 'u_dark'),
+      w: gl.getUniformLocation(p, 'u_w'),
+      res: gl.getUniformLocation(p, 'u_res')
+    };
+    return true;
+  }catch(e){ GL_ERR = 'throw:' + e.message; return false; }
+}
+
+function drawGL(t, area, dark){
+  if (!GL_OK) return;
+  gl.viewport(0, 0, bgCv.width, bgCv.height);
+  gl.uniform1f(glInfo.t, t);
+  gl.uniform1f(glInfo.area, area);
+  gl.uniform1f(glInfo.dark, dark);
+  gl.uniform1f(glInfo.w, G.shake * .02);
+  gl.uniform2f(glInfo.res, bgCv.width, bgCv.height);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+/* 无 WebGL 时的降级氛围：一条渐变 + 会动的噪点，同源、没有贴图 */
+var bgDots = null;
+function drawBG2D(t, area){
+  var g = getBG2(), pal = area < 2 ? ['#191d24','#0a0c0f'] : ['#141a22','#07080b'];
+  var lg = g.createLinearGradient(0, 0, 0, H);
+  lg.addColorStop(0, pal[0]); lg.addColorStop(1, pal[1]);
+  g.fillStyle = lg; g.fillRect(0, 0, W, H);
+  var rad = g.createRadialGradient(W*.5, H*.46, 0, W*.5, H*.46, Math.max(W,H)*.8);
+  rad.addColorStop(0, 'rgba(110,140,168,.13)'); rad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = rad; g.fillRect(0, 0, W, H);
+  if (!bgDots){
+    bgDots = [];
+    for (var i = 0; i < 260; i++) bgDots.push({x:Math.random(), y:Math.random(), s:Math.random()*1.5+.4, v:rnd(.4,1.6)});
+  }
+  for (var k = 0; k < bgDots.length; k++){
+    var d = bgDots[k];
+    d.y -= d.v / H * .6;
+    if (d.y < 0) d.y = 1;
+    g.fillStyle = 'rgba(150,175,196,' + (0.05 + (k % 5)*.012) + ')';
+    g.fillRect(d.x*W, d.y*H, d.s, d.s);
+  }
+}
+
+/* ============================================================
+   4. 残页域：三章、三种残相、页芯与两条结局
+   ============================================================ */
+var WH = 720;
+var FORMS = [
+  {id:'still', nm:'静影', col:'#8b9199', speed:150, jump:402, dbl:false, hover:false, heavy:true,  pass:false,
+   desc:'重。推得动没人要的页面残骸。'},
+  {id:'drift', nm:'流萤', col:'#9fd6d8', speed:205, jump:430, dbl:true,  hover:true,  heavy:false, pass:false,
+   desc:'轻。二段跳，按住跳可悬一小会儿。'},
+  {id:'glitch',nm:'碎码', col:'#b3a3d6', speed:180, jump:386, dbl:false, hover:false, heavy:false, pass:true,
+   desc:'碎。能穿过损坏屏障。'}
+];
+
+var CH2 = 2360, CH3 = 5200;
+
+var LOGS = [
+  {x:230,  y:452, a:1, t:'所有找不到的地址都会落在这里。你会习惯的。'},
+  {x:470,  y:392, a:1, t:'走廊尽头那盏灯不是灯，是没写完的一行标题在闪。'},
+  {x:900,  y:400, a:1, t:'雾不是水汽。是注销掉的模板还在吐气。'},
+  {x:1560, y:420, a:1, t:'有人把一个站点整夜删空，第二天这里就多了一条走廊。'},
+  {x:2120, y:430, a:1, t:'第一块页芯。它不记得自己属于哪个页面了。'},
+  {x:2680, y:436, a:2, t:'库房里的草稿都写了一半：有标题、有导航、没有正文。'},
+  {x:3050, y:330, a:2, t:'损坏屏障只拦完整的东西。碎掉的可以从缝里过去。'},
+  {x:3720, y:470, a:2, t:'第二块页芯被压在屏障后面，像一句没寄出的话。'},
+  {x:4520, y:470, a:2, t:'那两个人把旧存档清空了。清空的那一刻，索引之门裂了。'},
+  {x:5480, y:470, a:3, t:'索引之门剩三个槽。开一次，就再也不关。'},
+  {x:6060, y:470, a:3, t:'远处有光。那不是出口，是别人还在访问的页面。'}
+];
+
+var world = null;
+
+function buildWorld(){
+  var solids = [], fog = [], shards = [], nodes = [], decor = [];
+
+  /* 第一章 · 废弃走廊 */
+  solids.push({x:-200, y:520, w:800, h:160});
+  solids.push({x: 640, y:520, w:760, h:160});
+  solids.push({x:1460, y:520, w:900, h:160});
+  solids.push({x: 300, y:440, w:120, h:14});
+  solids.push({x: 520, y:380, w:110, h:14});
+  solids.push({x: 760, y:430, w:130, h:14});
+  solids.push({x: 980, y:370, w:120, h:14});
+  solids.push({x:1180, y:440, w:140, h:14});
+  solids.push({x:1490, y:400, w:150, h:14});
+  solids.push({x:1740, y:340, w:130, h:14});
+  solids.push({x:1980, y:420, w:120, h:14});
+
+  /* 第二章 · 草稿库房 */
+  solids.push({x:2360, y:520, w:760, h:160});
+  solids.push({x:3200, y:520, w:700, h:160});
+  solids.push({x:3900, y:520, w:320, h:160});
+  solids.push({x:4380, y:520, w:820, h:160});
+  solids.push({x:2560, y:445, w:120, h:14});
+  solids.push({x:2760, y:380, w:120, h:14});
+  solids.push({x:2940, y:320, w:110, h:14});
+  solids.push({x:3260, y:430, w:130, h:14});
+  solids.push({x:3500, y:360, w:110, h:14});
+  solids.push({x:3700, y:430, w:140, h:14});
+  solids.push({x:4600, y:440, w:130, h:14});
+  solids.push({x:4820, y:370, w:140, h:14});
+
+  /* 第三章 · 索引废墟 */
+  solids.push({x:5200, y:520, w:1600, h:160});
+  solids.push({x:5480, y:450, w: 90, h:14});
+  solids.push({x:5640, y:390, w:140, h:14});
+  solids.push({x:5900, y:320, w:150, h:14});
+  solids.push({x:6180, y:400, w:120, h:14});
+  solids.push({x:6350, y:450, w:110, h:14});
+
+  /* 消蚀体：不是怪，是空间崩坏的形状。站进去掉能量 */
+  fog.push({x:700,  y:452, w:120, h:68});
+  fog.push({x:1620, y:440, w:150, h:80});
+  fog.push({x:3560, y:452, w:120, h:68});
+  fog.push({x:4680, y:440, w:120, h:80});
+  fog.push({x:5320, y:440, w:130, h:80});
+  fog.push({x:6100, y:440, w:150, h:80});
+
+  /* 页芯 */
+  shards.push({x:2120, y:486, got:false, a:1});
+  shards.push({x:4180, y:486, got:false, a:2});
+  shards.push({x:5950, y:280, got:false, a:3, free:true});
+
+  /* 镜像节点（存档点） */
+  nodes.push({x:60,   y:498});
+  nodes.push({x:1300, y:498});
+  nodes.push({x:2200, y:498});
+  nodes.push({x:2660, y:498});
+  nodes.push({x:3900, y:498});
+  nodes.push({x:4500, y:498});
+  nodes.push({x:5260, y:498});
+  nodes.push({x:6420, y:498});
+
+  /* 漂浮的页面碎片 */
+  var TAGS = ['</div>','<body>','404','unlinked','draft','.html','<h1>','untitled','<form>','0','<a href>','&nbsp;'];
+  for (var i = 0; i < 70; i++){
+    decor.push({x:rnd(0,6900), y:rnd(40,WH), n:TAGS[i % TAGS.length],
+                s:rnd(9,17), a:rnd(.05,.16), v:rnd(4,16)});
+  }
+
+  return {
+    solids:solids, fog:fog, shards:shards, nodes:nodes, decor:decor,
+    crate:{x:2450, y:478, w:46, h:42},
+    plate:{x:2600, y:514, w:66, h:6},
+    door:{x:3300, y:300, w:26, h:220, open:false},
+    barrier:{x:4140, y:280, w:34, h:240},
+    keeper:{x:2500, y:492},
+    gate:{x:6560, y:280, w:70, h:240},
+    cp:{x:60, y:498}
+  };
+}
+
+/* ============================================================
+   5. 游戏状态
+   ============================================================ */
+var G = {
+  running:false, paused:false, T:0, last:0,
+  area:1, shownArea:0, frags:0, logsRead:0, ending:null, endT:0,
+  talk:0, sayT:0, shake:0, chapT:0, idle:0,
+  pl:null, cam:{x:0,y:0}, grain:null
+};
+
+function spawnPlayer(x, y){
+  G.pl = {x:x, y:y, w:12, h:21, vx:0, vy:0, onGround:false, jumps:0,
+          form:0, energy:100, hurtT:0, stepT:0};
+  G.cam.x = x - W*.5; G.cam.y = 0;
+}
+
+function solidList(){
+  var s = world.solids.slice();
+  s.push(world.crate);
+  if (!world.door.open) s.push(world.door);
+  if (G.pl.form !== 2) s.push(world.barrier);
+  return s;
+}
+function overlap(a,b){
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function moveX(dx){
+  if (!dx) return;
+  var p = G.pl;
+  p.x += dx;
+  var list = solidList();
+  for (var i = 0; i < list.length; i++){
+    var s = list[i];
+    if (!overlap(p, s)) continue;
+    if (s === world.crate && p.form === 0) pushCrate(dx);
+    if (!overlap(p, s)) continue;
+    if (dx > 0) p.x = s.x - p.w; else p.x = s.x + s.w;
+    p.vx = 0;
+  }
+}
+function pushCrate(dx){
+  var c = world.crate, nx = c.x + dx * .92;
+  var box = {x:nx, y:c.y, w:c.w, h:c.h};
+  var list = world.solids.concat([world.door, world.barrier]);
+  for (var i = 0; i < list.length; i++) if (overlap(box, list[i])) return false;
+  c.x = nx;
+  if (!world.door.open && Math.abs((c.x + c.w*.5) - (world.plate.x + world.plate.w*.5)) < 34){
+    world.door.open = true;
+    tone(220, .12, .6, 'sine', 440);
+    toast('闸口开了。压住它的是一整页没人要的残骸。', 3.4);
+  }
+}
+
+function moveY(dy){
+  if (!dy) return;
+  var p = G.pl;
+  p.y += dy;
+  p.onGround = false;
+  var list = solidList();
+  for (var i = 0; i < list.length; i++){
+    var s = list[i];
+    if (!overlap(p, s)) continue;
+    if (dy > 0){ p.y = s.y - p.h; p.vy = 0; p.onGround = true; }
+    else { p.y = s.y + s.h; p.vy = 0; }
+  }
+}
+
+function respawn(){
+  var p = G.pl;
+  p.x = world.cp.x; p.y = world.cp.y; p.vx = p.vy = 0; p.energy = 100;
+  shakeScreen(9);
+  tone(40, .3, .55, 'sine', 26);
+  toast('你的请求被退回上一次存档。', 2.6);
+}
+function shakeScreen(v){ G.shake = Math.max(G.shake, v); }
+
+function cycleForm(){
+  G.pl.form = (G.pl.form + 1) % 3;
+  var f = FORMS[G.pl.form];
+  el('form').textContent = f.nm;
+  el('form').style.color = f.col;
+  tone(330 + G.pl.form * 130, .06, .2, 'triangle', 440 + G.pl.form * 130);
+  STEPFX[G.pl.form]();
+  toast(f.nm + '：' + f.desc, 2.4);
+}
+
+/* ============================================================
+   6. 交互
+   ============================================================ */
+function interact(){
+  if (G.ending) return;
+  var p = G.pl, kp = world.keeper;
+
+  /* 守码者：两块页芯以上才肯把话说完 */
+  if (Math.abs(kp.x - (p.x + p.w*.5)) < 52 && Math.abs(kp.y - (p.y + p.h*.5)) < 72){
+    if (G.frags < 2){ say('守码者：两块。不够说完这句话。'); G.sayT = 4; return; }
+    if (!G.talk){
+      G.talk = 1;
+      say('守码者：门修不好了。你手里两块，加上我这颗内核，勉强能撑住这片域。拿去开门，或者留下来。');
+      G.sayT = 7;
+      tone(120, .05, 2.6, 'sine', 96);
+    } else {
+      phaseB();
+    }
+    return;
+  }
+
+  /* 索引之门 */
+  var g = world.gate;
+  if (Math.abs(g.x + g.w*.5 - (p.x + p.w*.5)) < 118 && Math.abs(p.y + p.h*.5 - (g.y + g.h*.5)) < 170){
+    if (G.frags >= 3) phaseA();
+    else { say('槽里还空着 ' + (3 - G.frags) + ' 格。'); G.sayT = 2.6; }
+    return;
+  }
+
+  /* 日志残片 */
+  var best = null, bd = 52;
+  for (var i = 0; i < LOGS.length; i++){
+    var L = LOGS[i];
+    if (L.read) continue;
+    if (Math.abs(L.y - (p.y + p.h*.5)) > 76) continue;
+    var d = Math.abs(L.x - (p.x + p.w*.5));
+    if (d < bd){ bd = d; best = L; }
+  }
+  if (best){
+    best.read = true; G.logsRead++;
+    say(best.t); G.sayT = 5.2;
+    tone(620, .05, .28, 'sine', 780);
+    try{ localStorage.setItem('eov_logs', String(G.logsRead)); }catch(e){}
+    return;
+  }
+
+  say('这里没有可以回复的东西。'); G.sayT = 2;
+}
+
+function phaseA(){
+  G.ending = 'A'; G.endT = 0;
+  try{ localStorage.setItem('eov_endA', '1'); }catch(e){}
+  tone(196, .1, 2.6, 'sine', 392);
+  tone(294, .06, 3.2, 'triangle', 588);
+  hideSay();
+  el('chap').style.opacity = 0;
+}
+function phaseB(){
+  G.ending = 'B'; G.endT = 0;
+  try{ localStorage.setItem('eov_endB', '1'); }catch(e){}
+  tone(147, .12, 3.2, 'sine', 110);
+  tone(220, .05, 3.8, 'triangle', 165);
+  hideSay();
+  el('chap').style.opacity = 0;
+}
+function say(s){ var d = el('say'); d.textContent = s || ''; d.style.opacity = s ? 1 : 0; }
+function hideSay(){ say(''); G.sayT = 0; }
+function toast(s, t){ say(s); G.sayT = t || 3.2; }
+
+/* ============================================================
+   7. 输入
+   ============================================================ */
+var keys = {};
+function keyDown(k){
+  if (!G.running || !G.pl) return;
+  if (k === 'escape'){
+    G.paused = !G.paused;
+    el('pause').style.display = G.paused ? 'flex' : 'none';
+    return;
+  }
+  if (G.paused) return;
+  if (k === 'r'){ respawn(); return; }
+  if (k === 'e'){ interact(); return; }
+  if (k === 'f'){ if (!G.ending) cycleForm(); return; }
+  keys[k] = true;
+}
+addEventListener('keydown', function(e){
+  if (opened && G.running && [' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(e.key) >= 0) e.preventDefault();
+  if (e.repeat) return;
+  var k = e.key.toLowerCase();
+  if (e.key === 'Shift') k = 'f';
+  if (e.key === 'Escape') k = 'escape';
+  keyDown(k);
+});
+addEventListener('keyup', function(e){
+  var k = e.key.toLowerCase();
+  if (e.key === 'Shift') k = 'f';
+  keys[k] = false;
+});
+addEventListener('blur', function(){ keys = {}; });
+
+/* 移动端虚拟按键 */
+(function touchPad(){
+  var btns = document.querySelectorAll('#touch button');
+  for (var i = 0; i < btns.length; i++){
+    (function(b){
+      var k = b.getAttribute('data-k');
+      var start = function(e){ e.preventDefault(); keyDown(k); };
+      var end = function(e){ e.preventDefault(); keys[k] = false; };
+      b.addEventListener('touchstart', start, {passive:false});
+      b.addEventListener('touchend', end, {passive:false});
+      b.addEventListener('touchcancel', end, {passive:false});
+      b.addEventListener('mousedown', start);
+      b.addEventListener('mouseup', end);
+    })(btns[i]);
+  }
+})();
+addEventListener('contextmenu', function(e){ e.preventDefault(); shakeScreen(4); });
+
+/* ============================================================
+   8. 更新
+   ============================================================ */
+function update(dt){
+  G.T += dt;
+  if (G.ending){
+    G.endT += dt;
+    if (G.ending === 'A' && G.endT > 7 && keys['e']) backToShell();
+    return;
+  }
+  if (G.paused) return;
+
+  var p = G.pl, f = FORMS[p.form];
+  var dir = (keys['a'] || keys['arrowleft'] ? -1 : 0) + (keys['d'] || keys['arrowright'] ? 1 : 0);
+  var wantJump = keys[' '] || keys['w'] || keys['arrowup'];
+
+  p.vx = dir * f.speed;
+
+  if (wantJump && p.onGround && !p.jumpLatch){
+    p.vy = -f.jump; p.onGround = false; p.jumpLatch = true;
+    p.jumps = f.dbl ? 1 : 0;
+    STEPFX[p.form]();
+  } else if (wantJump && !p.onGround && p.jumps > 0 && !p.jumpLatch){
+    p.vy = -f.jump * .92; p.jumps--; p.jumpLatch = true;
+    burst(900, .05, .12, 'bandpass');
+  }
+  if (!wantJump) p.jumpLatch = false;
+
+  /* 流萤的悬停：把下坠兜住，不是飞行 */
+  if (wantJump && f.hover && !p.onGround && p.vy > 40) p.vy = 40;
+
+  p.vy += 980 * dt;
+  if (p.vy > 640) p.vy = 640;
+
+  moveX(p.vx * dt);
+  moveY(p.vy * dt);
+
+  if (p.onGround) p.jumps = f.dbl ? 2 : 0;
+
+  /* 脚步：按位移节流 */
+  if (p.onGround && Math.abs(p.vx) > 20){
+    p.stepT -= dt;
+    if (p.stepT <= 0){ STEPFX[p.form](); p.stepT = f.heavy ? .34 : .22; }
+  }
+
+  /* 消蚀体 */
+  var inFog = false;
+  for (var i = 0; i < world.fog.length; i++) if (overlap(p, world.fog[i])) inFog = true;
+  if (inFog){
+    p.energy -= 46 * dt;
+    if (Math.floor(G.T * 8) % 2 === 0) burst(260, .03, .1, 'lowpass');
+    shakeScreen(2.5);
+    if (p.energy <= 0){ p.energy = 0; respawn(); }
+  } else {
+    p.energy = Math.min(100, p.energy + 12 * dt);
+  }
+  el('bar').firstElementChild.style.transform = 'scaleX(' + (p.energy / 100) + ')';
+
+  /* 页芯 */
+  for (var s = 0; s < world.shards.length; s++){
+    var sh = world.shards[s];
+    if (sh.got) continue;
+    if (Math.abs(sh.x - (p.x + p.w*.5)) < 27 && Math.abs(sh.y - (p.y + p.h*.5)) < 36){
+      sh.got = true; G.frags++;
+      el('frag').textContent = '页芯 ' + G.frags + '/3';
+      tone(660, .1, .55, 'sine', 990);
+      tone(990, .05, .65, 'triangle', 1320);
+      toast(sh.free ? '第三块页芯在你手里发烫。它不想被嵌进那扇门。' : '页芯碎片 +1。它记得一个已经不存在的地址。', 3.2);
+    }
+  }
+
+  /* 镜像节点存档 */
+  for (var n = 0; n < world.nodes.length; n++){
+    var nd = world.nodes[n];
+    if (Math.abs(nd.x - p.x) < 42 && p.onGround && world.cp.x !== nd.x){
+      world.cp = {x:nd.x, y:nd.y};
+      tone(440, .03, .32, 'sine');
+    }
+  }
+
+  if (p.y > WH + 80) respawn();
+
+  /* 镜头 */
+  var tx = p.x + p.w*.5 - W*.5, ty = p.y - H*.62;
+  G.cam.x += (tx - G.cam.x) * Math.min(1, dt * 7);
+  G.cam.y += (clamp(ty, 0, Math.max(0, WH - H)) - G.cam.y) * Math.min(1, dt * 6);
+  G.shake = Math.max(0, G.shake - dt * 18);
+
+  if (G.sayT > 0){ G.sayT -= dt; if (G.sayT <= 0) hideSay(); }
+
+  /* 待得太久，墙会开始记得你 */
+  G.idle += dt;
+  if (G.idle > 210 && Math.floor(G.idle) % 40 === 0) toast('the hole remembers you', 3);
+}
+
+/* ============================================================
+   9. 绘制
+   ============================================================ */
+function makeGrain(){
+  var N = 128, c = document.createElement('canvas');
+  c.width = c.height = N;
+  var x = c.getContext('2d'), im = x.createImageData(N, N), d = im.data;
+  for (var i = 0; i < N*N; i++){
+    var v = 150 + Math.random()*200;
+    d[i*4] = d[i*4+1] = d[i*4+2] = v; d[i*4+3] = 34;
+  }
+  x.putImageData(im, 0, 0);
+  G.grain = c;
+}
+
+function palette(){
+  if (G.area === 1) return {fog:'152,176,182'};
+  if (G.area === 2) return {fog:'150,186,190'};
+  return {fog:'160,190,210'};
+}
+
+function draw(){
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  var p = G.pl, pal = palette();
+  var sx = rnd(-1,1) * G.shake, sy = rnd(-1,1) * G.shake;
+
+  /* 远景：一叠被丢掉的网页，只留轮廓，不描边 */
+  ctx.save();
+  ctx.translate(-G.cam.x * .32 + sx * .5, -G.cam.y * .3);
+  for (var i = 0; i < 16; i++){
+    var bx = i * 600 - 260, by = 70 + Math.sin(i * 1.7 + G.T * .18) * 46;
+    var ba = .016 + (i % 3) * .007;
+    ctx.fillStyle = 'rgba(126,148,168,' + ba + ')';
+    ctx.fillRect(bx, by, 430, 250);
+    ctx.fillStyle = 'rgba(126,148,168,' + (ba * .55) + ')';
+    ctx.fillRect(bx + 34, by + 268, 300, 160);
+    ctx.fillStyle = 'rgba(150,175,196,' + (ba * 2.6) + ')';
+    ctx.fillRect(bx + 24, by + 40, 210, 2);
+    ctx.fillRect(bx + 24, by + 62, 320, 1);
+    ctx.fillRect(bx + 24, by + 78, 280, 1);
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(-G.cam.x + sx, -G.cam.y + sy);
+
+  /* 漂浮的页面碎片 */
+  ctx.textAlign = 'left';
+  for (var d = 0; d < world.decor.length; d++){
+    var de = world.decor[d];
+    ctx.fillStyle = 'rgba(150,172,190,' + (de.a * .55) + ')';
+    ctx.font = de.s + 'px ui-monospace, Menlo, monospace';
+    ctx.fillText(de.n, de.x + Math.sin(G.T * .6 + d) * de.v, de.y + Math.cos(G.T * .4 + d * 2) * de.v * .6);
+  }
+
+  /* 镜像节点 */
+  for (var n2 = 0; n2 < world.nodes.length; n2++){
+    var nd = world.nodes[n2];
+    var on = Math.abs(nd.x - world.cp.x) < 1;
+    ctx.strokeStyle = on ? 'rgba(160,200,220,.52)' : 'rgba(120,140,160,.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(nd.x, nd.y - 22, 7, 0, 6.283); ctx.stroke();
+    ctx.fillStyle = on ? 'rgba(160,200,220,.2)' : 'rgba(140,160,180,.06)';
+    ctx.beginPath(); ctx.arc(nd.x, nd.y - 22, 3.2, 0, 6.283); ctx.fill();
+  }
+
+  /* 平台：一叠没渲染完的页面，上沿是被反复访问磨亮的边 */
+  for (var k = 0; k < world.solids.length; k++){
+    var s = world.solids[k];
+    var sg = ctx.createLinearGradient(0, s.y, 0, s.y + Math.min(s.h, 110));
+    sg.addColorStop(0, 'rgba(62,71,83,1)');
+    sg.addColorStop(.12, 'rgba(40,47,56,1)');
+    sg.addColorStop(.55, 'rgba(24,29,36,1)');
+    sg.addColorStop(1, 'rgba(12,15,19,1)');
+    ctx.fillStyle = sg; ctx.fillRect(s.x, s.y, s.w, s.h);
+    ctx.fillStyle = 'rgba(180,206,222,.5)'; ctx.fillRect(s.x, s.y, s.w, 1.6);
+    ctx.fillStyle = 'rgba(180,206,222,.09)'; ctx.fillRect(s.x, s.y + 1.6, s.w, 1);
+    for (var ly = s.y + 14, li = 0; ly < s.y + s.h; ly += 14, li++){
+      ctx.fillStyle = 'rgba(132,158,178,' + Math.max(0, .07 - li * .005) + ')';
+      ctx.fillRect(s.x + 8, ly, s.w - 16, 1);
+    }
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(s.x + s.w - 2, s.y, 2, s.h);
+  }
+
+  /* 货箱 / 压板 / 闸口 */
+  var c = world.crate;
+  ctx.fillStyle = 'rgba(44,48,54,.95)'; ctx.fillRect(c.x, c.y, c.w, c.h);
+  ctx.strokeStyle = 'rgba(140,158,176,.34)'; ctx.lineWidth = 1;
+  ctx.strokeRect(c.x + .5, c.y + .5, c.w - 1, c.h - 1);
+  ctx.fillStyle = 'rgba(140,158,176,.2)'; ctx.fillRect(c.x + 5, c.y + 8, c.w - 10, 1.5);
+
+  var pl2 = world.plate;
+  ctx.fillStyle = world.door.open ? 'rgba(150,220,210,.55)' : 'rgba(120,140,160,.32)';
+  ctx.fillRect(pl2.x, pl2.y, pl2.w, pl2.h);
+
+  var dr = world.door;
+  ctx.fillStyle = dr.open ? 'rgba(80,110,120,.14)' : 'rgba(24,28,34,.96)';
+  ctx.fillRect(dr.x, dr.y, dr.w, dr.h);
+  ctx.strokeStyle = 'rgba(130,150,168,.38)'; ctx.strokeRect(dr.x + .5, dr.y + .5, dr.w - 1, dr.h - 1);
+
+  /* 损坏屏障：只有碎掉的能过去 */
+  var bar = world.barrier;
+  ctx.save();
+  ctx.globalAlpha = p.form === 2 ? .16 : .52;
+  for (var q = 0; q < bar.h; q += 9){
+    var wob = Math.sin(G.T * 3 + q * .4) * 3;
+    ctx.fillStyle = 'rgba(150,120,190,.55)';
+    ctx.fillRect(bar.x + wob, bar.y + q, bar.w, 5);
+  }
+  ctx.restore();
+
+  /* 消蚀体：没有边界的一团噪点，越靠中心越实 */
+  for (var f2 = 0; f2 < world.fog.length; f2++){
+    var fg = world.fog[f2];
+    for (var j = 0; j < 46; j++){
+      var ang = G.T * .9 + j * 2.1, rr = Math.sin(G.T * 1.6 + j) * .5 + .5;
+      var fx = fg.x + (Math.sin(ang + j) * .5 + .5) * fg.w;
+      var fy = fg.y + (Math.cos(ang * .7 + j) * .5 + .5) * fg.h;
+      var rad2 = 9 + rr * 13;
+      var rg2 = ctx.createRadialGradient(fx, fy, 0, fx, fy, rad2);
+      rg2.addColorStop(0, 'rgba(' + pal.fog + ',' + (.05 + rr * .06) + ')');
+      rg2.addColorStop(1, 'rgba(' + pal.fog + ',0)');
+      ctx.fillStyle = rg2;
+      ctx.beginPath(); ctx.arc(fx, fy, rad2, 0, 6.283); ctx.fill();
+    }
+    var fg2 = ctx.createLinearGradient(0, fg.y, 0, fg.y + fg.h);
+    fg2.addColorStop(0, 'rgba(' + pal.fog + ',.10)');
+    fg2.addColorStop(1, 'rgba(' + pal.fog + ',0)');
+    ctx.fillStyle = fg2; ctx.fillRect(fg.x, fg.y, fg.w, fg.h);
+  }
+
+  /* 页芯 */
+  for (var sh2 = 0; sh2 < world.shards.length; sh2++){
+    var sd = world.shards[sh2];
+    if (sd.got) continue;
+    var bob = Math.sin(G.T * 1.6 + sh2) * 4;
+    ctx.save();
+    ctx.translate(sd.x, sd.y + bob);
+    ctx.rotate(Math.PI / 4 + Math.sin(G.T * .6) * .1);
+    ctx.fillStyle = 'rgba(190,220,232,.85)'; ctx.fillRect(-5, -5, 10, 10);
+    ctx.restore();
+    var rg = ctx.createRadialGradient(sd.x, sd.y + bob, 0, sd.x, sd.y + bob, 32);
+    rg.addColorStop(0, 'rgba(190,220,232,.22)'); rg.addColorStop(1, 'rgba(190,220,232,0)');
+    ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(sd.x, sd.y + bob, 32, 0, 6.283); ctx.fill();
+  }
+
+  /* 守码者：一串往下流的字符，正在散 */
+  var kp = world.keeper;
+  var GLY = ['0','1','{','}','/','#','…','·','i','d','x','9'];
+  for (var kg = 0; kg < 15; kg++){
+    var ky = kp.y - 78 + kg * 6 + (G.T * 9) % 6;
+    ctx.fillStyle = 'rgba(160,190,205,' + (.09 + (kg / 15) * .22) + ')';
+    ctx.font = (9 + (kg % 3)) + 'px ui-monospace, monospace';
+    ctx.fillText(GLY[(kg + Math.floor(G.T * 3)) % GLY.length],
+                 kp.x - 6 + Math.sin(G.T * 1.4 + kg * .8) * 5, ky);
+  }
+  ctx.fillStyle = 'rgba(170,200,215,.5)';
+  ctx.beginPath(); ctx.arc(kp.x, kp.y - 64, 3.4, 0, 6.283); ctx.fill();
+
+  /* 索引之门 */
+  var gt = world.gate;
+  ctx.strokeStyle = 'rgba(150,180,200,' + (G.frags >= 3 ? .72 : .34) + ')';
+  ctx.lineWidth = 2; ctx.strokeRect(gt.x, gt.y, gt.w, gt.h);
+  for (var slot = 0; slot < 3; slot++){
+    var sy2 = gt.y + 42 + slot * 48;
+    ctx.fillStyle = slot < G.frags ? 'rgba(190,220,232,.82)' : 'rgba(120,140,160,.16)';
+    ctx.fillRect(gt.x - 12, sy2, 8, 8);
+  }
+  if (G.frags >= 3){
+    var g3 = ctx.createRadialGradient(gt.x + gt.w*.5, gt.y + gt.h*.5, 0, gt.x + gt.w*.5, gt.y + gt.h*.5, 160);
+    g3.addColorStop(0, 'rgba(190,220,232,.16)'); g3.addColorStop(1, 'rgba(190,220,232,0)');
+    ctx.fillStyle = g3; ctx.fillRect(gt.x - 150, gt.y - 110, gt.w + 300, gt.h + 220);
+  }
+
+  /* 日志提示 */
+  ctx.font = '11px ui-monospace, monospace';
+  for (var lg = 0; lg < LOGS.length; lg++){
+    var L = LOGS[lg];
+    if (L.read) continue;
+    if (Math.abs(L.x - (p.x + p.w*.5)) > 62) continue;
+    ctx.fillStyle = 'rgba(190,205,215,.5)';
+    ctx.fillText('[E]', L.x - 8, L.y - 12);
+  }
+  if (!G.ending){
+    var gtx = world.gate.x + world.gate.w * .5;
+    if (Math.abs(gtx - (p.x + p.w*.5)) < 150){
+      ctx.fillStyle = G.frags >= 3 ? 'rgba(200,225,235,.75)' : 'rgba(150,165,178,.34)';
+      ctx.fillText('[E] ' + (G.frags >= 3 ? '把三枚页芯嵌进去' : '还缺 ' + (3 - G.frags)), gtx - 34, world.gate.y - 14);
+    }
+    if (Math.abs(world.keeper.x - (p.x + p.w*.5)) < 84){
+      ctx.fillStyle = 'rgba(170,196,210,.6)';
+      ctx.fillText('[E] 对守码者说话', world.keeper.x - 40, world.keeper.y - 96);
+    }
+  }
+
+  /* 玩家：一簇光点，不是小人 */
+  var fc = FORMS[p.form];
+  ctx.save();
+  ctx.translate(p.x + p.w*.5, p.y + p.h*.5);
+  var halo = ctx.createRadialGradient(0, 0, 0, 0, 0, 34);
+  halo.addColorStop(0, 'rgba(210,232,240,.34)');
+  halo.addColorStop(.45, 'rgba(190,220,235,.10)');
+  halo.addColorStop(1, 'rgba(190,220,235,0)');
+  ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(0, 0, 34, 0, 6.283); ctx.fill();
+  for (var pt = 0; pt < 9; pt++){
+    var pa = G.T * 2.2 + pt * 1.4, pr = 3.4 + (pt % 3) * 1.9;
+    ctx.globalAlpha = .62 + (pt % 3) * .13;
+    ctx.fillStyle = pt % 3 === 0 ? '#e7f2f6' : fc.col;
+    ctx.beginPath();
+    ctx.arc(Math.cos(pa) * pr * .95, Math.sin(pa * 1.3) * pr * 1.15, pt % 3 === 0 ? 2.4 : 1.9, 0, 6.283);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgba(190,220,235,.12)';
+  ctx.beginPath(); ctx.ellipse(0, p.h * .62, 9, 2.4, 0, 0, 6.283); ctx.fill();
+  ctx.restore();
+
+  ctx.restore();
+
+  /* 暗角 + 扫描线 + 颗粒 */
+  var vg = ctx.createRadialGradient(W*.5, H*.48, Math.min(W,H)*.36, W*.5, H*.5, Math.max(W,H)*.78);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.62)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(0,0,0,.10)';
+  for (var sl = 0; sl < H; sl += 3) ctx.fillRect(0, sl, W, 1);
+  if (G.grain){
+    ctx.globalAlpha = .42; ctx.globalCompositeOperation = 'overlay';
+    ctx.drawImage(G.grain, 0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = 'rgba(20,32,48,.06)'; ctx.fillRect(0, 0, W, H);
+
+  /* 结局 */
+  if (G.ending){
+    var k2 = Math.min(1, G.endT / 1.8);
+    ctx.fillStyle = 'rgba(5,6,9,' + (.86 * k2) + ')'; ctx.fillRect(0, 0, W, H);
+    if (G.ending === 'B') drawGather(k2);
+    ctx.textAlign = 'center';
+    var lines = G.ending === 'A'
+      ? ['你穿过了索引之门。', '现实网络的光很亮，纸的边角在身后合拢。', '这片残页域会继续陷落——它记得你来过。']
+      : ['你接住了守码者的内核。', '不是所有碎片都用来开门。', '索引之门不会再亮，而你成了这片域的维系者。'];
+    ctx.font = '15px "Times New Roman", Times, serif';
+    for (var li2 = 0; li2 < lines.length; li2++){
+      var la = clamp((G.endT - 1.2 - li2 * .9) / .8, 0, 1);
+      ctx.fillStyle = 'rgba(206,218,228,' + (.7 * la) + ')';
+      ctx.fillText(lines[li2], W*.5, H*.45 + li2 * 28);
+    }
+    if (G.ending === 'A' && G.endT > 7){
+      ctx.fillStyle = 'rgba(160,180,196,' + (.4 + Math.sin(G.T * 2) * .15) + ')';
+      ctx.font = '12px ui-monospace, monospace';
+      ctx.fillText('按 E 回到 404', W*.5, H*.72);
+    }
+  }
+  ctx.textAlign = 'left';
+}
+
+function drawGather(k){
+  for (var i = 0; i < 70; i++){
+    var ang = i * 2.4 + G.T * .3, rad = (1 - k) * (240 + (i % 7) * 44) + 8;
+    var x = W*.5 + Math.cos(ang) * rad, y = H*.5 + Math.sin(ang) * rad * .7;
+    ctx.fillStyle = 'rgba(190,220,232,' + ((.18 + (i % 5) * .08) * k) + ')';
+    ctx.beginPath(); ctx.arc(x, y, 1.7, 0, 6.283); ctx.fill();
+  }
+  var g = ctx.createRadialGradient(W*.5, H*.5, 0, W*.5, H*.5, 180 * k);
+  g.addColorStop(0, 'rgba(190,220,232,' + (.24 * k) + ')'); g.addColorStop(1, 'rgba(190,220,232,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+/* ============================================================
+   10. 章节卡、主循环与调试读数
+   ============================================================ */
+var CHAP = {
+  1:['CHAPTER I', '废弃走廊', '所有找不到的地址，都会落在这里。'],
+  2:['CHAPTER II', '草稿库房', '草稿都写了一半：有标题、有导航、没有正文。'],
+  3:['CHAPTER III', '索引废墟', '门剩三个槽。开一次，就再也不关。']
+};
+var DBG = /dbg=1/.test(location.search);
+
+function showChapter(a){
+  var c = CHAP[a];
+  if (!c) return;
+  G.shownArea = a;
+  var d = el('chap');
+  d.innerHTML = '';
+  d.appendChild(document.createTextNode(c[0]));
+  var b = document.createElement('b');
+  b.textContent = c[1] + ' · ' + c[2];
+  d.appendChild(b);
+  d.style.opacity = 1;
+  G.chapT = 3.2;
+}
+
+function debugOut(){
+  if (!DBG) return;
+  var d = el('st');
+  if (!d){
+    d = document.createElement('div'); d.id = 'st';
+    d.style.cssText = 'position:fixed;left:6px;top:6px;z-index:9;font:10px ui-monospace,monospace;' +
+                      'color:#8d99a4;pointer-events:none;white-space:pre';
+    document.body.appendChild(d);
+  }
+  d.textContent = 'x=' + Math.round(G.pl.x) + ' y=' + Math.round(G.pl.y) + ' f=' + G.pl.form +
+    ' fr=' + G.frags + ' e=' + Math.round(G.pl.energy) + ' cp=' + world.cp.x +
+    ' door=' + (world.door.open ? 1 : 0) + ' end=' + (G.ending || '-') + ' gl=' + (GL_OK ? 1 : 0) +
+    (GL_ERR ? ' err=' + GL_ERR : '');
+}
+
+function loop(now){
+  if (!G.running) return;
+  requestAnimationFrame(loop);
+  if (!G.last) G.last = now;
+  var dt = Math.min(.05, (now - G.last) / 1000);
+  G.last = now;
+  update(dt);
+
+  G.area = G.pl.x < CH2 ? 1 : G.pl.x < CH3 ? 2 : 3;
+  if (G.area !== G.shownArea) showChapter(G.area);
+
+  if (G.chapT > 0){ G.chapT -= dt; if (G.chapT <= 0) el('chap').style.opacity = 0; }
+
+  var dark = G.ending ? Math.min(.7, G.endT / 3) : 0;
+  if (GL_OK) drawGL(G.T, G.area - .5, dark);
+  else drawBG2D(G.T, G.area);
+
+  draw();
+  debugOut();
+}
+
+/* ============================================================
+   11. 启动
+   ============================================================ */
+function resize(){
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = gmCv.clientWidth || innerWidth;
+  H = gmCv.clientHeight || innerHeight;
+  gmCv.width = Math.floor(W * DPR); gmCv.height = Math.floor(H * DPR);
+  bgCv.width = Math.floor(W); bgCv.height = Math.floor(H);
+  if (GL_OK && gl) gl.viewport(0, 0, bgCv.width, bgCv.height);
+}
+addEventListener('resize', function(){ if (G.running) resize(); });
+
+function startGame(){
+  if (G.running) return;
+  resize();
+  if (!G.grain) makeGrain();
+
+  world = buildWorld();
+  for (var i = 0; i < LOGS.length; i++) LOGS[i].read = false;
+  spawnPlayer(60, 470);
+  G.frags = 0; G.logsRead = 0; G.area = 1; G.shownArea = 0;
+  G.T = 0; G.last = 0; G.idle = 0; G.talk = 0; G.ending = null;
+  el('frag').textContent = '页芯 0/3';
+
+  var q = location.search;
+  if (q.indexOf('fresh=1') >= 0){ try{ localStorage.clear(); }catch(e){} }
+
+  var done = false;
+  try{ done = !!(localStorage.getItem('eov_endA') || localStorage.getItem('eov_endB')); }catch(e){}
+  if (done && q.indexOf('fresh=1') < 0){
+    spawnPlayer(5260, 470);
+    world.cp = {x:5260, y:498};
+    world.shards[0].got = true; world.shards[1].got = true;
+    G.frags = 2;
+    el('frag').textContent = '页芯 2/3';
+  }
+
+  var fr = /frag=(\d)/.exec(q);
+  if (fr){ G.frags = clamp(Number(fr[1]), 0, 3); el('frag').textContent = '页芯 ' + G.frags + '/3'; }
+  var sp = /spawn=(-?\d+),(-?\d+)/.exec(q);
+  if (sp) spawnPlayer(Number(sp[1]), Number(sp[2]));
+  /* 出生会重建玩家对象，残相必须在它之后落定 */
+  var forms = /form=(\d)/.exec(q);
+  if (forms){ G.pl.form = clamp(Number(forms[1]), 0, 2); }
+
+  var f = FORMS[G.pl.form];
+  el('form').textContent = f.nm;
+  el('form').style.color = f.col;
+  G.area = G.pl.x < CH2 ? 1 : G.pl.x < CH3 ? 2 : 3;
+
+  el('hud').style.opacity = 1;
+  gmCv.style.opacity = 1;
+  grainEl.style.opacity = 0;
+
+  G.running = true;
+  G.paused = false;
+  ac();
+  requestAnimationFrame(loop);
+  tone(110, .06, 2.4, 'sine', 82);
+  toast(G.pl.x >= CH3 ? '你回来过。门还记得你上次站的位置。' : '你在一条没有尽头的走廊里醒来。', 4);
+  setTimeout(function(){ showChapter(G.area); }, 120);
+}
+
+window.EOV = {start:startGame, back:backToShell};
+window.__eov = {
+  st: function(){
+    return {x:Math.round(G.pl.x), y:Math.round(G.pl.y), form:G.pl.form, frags:G.frags,
+            area:G.area, cp:world ? world.cp.x : 0, door:world ? world.door.open : false,
+            energy:Math.round(G.pl.energy), ending:G.ending, gl:GL_OK};
+  },
+  warp: function(x,y){ G.pl.x = x; G.pl.y = y; G.cam.x = x - W*.5; },
+  frag: function(n){ G.frags = n; el('frag').textContent = '页芯 ' + n + '/3'; },
+  form: function(n){ G.pl.form = n; },
+  end: function(w){ if (w === 'A') phaseA(); else phaseB(); }
+};
+
+/* 先试 WebGL，拿不到就退回 Canvas2D——两条路都能玩 */
+GL_OK = initGL();
+resize();
+if (GL_OK) drawGL(0, 0, 0); else drawBG2D(0, 1);
+
+/* ?dbg=1 直接踢开门，省掉敲三下 */
+(function(){
+  if (/dbg=1/.test(location.search)) setTimeout(function(){
+    if (clk === 0){ knockOnce(); knockOnce(); knockOnce(); }
+  }, 80);
+})();
+
+})();
+</script>
+</body>
+</html>
